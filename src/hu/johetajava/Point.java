@@ -18,7 +18,7 @@ public class Point {
 
         float distance;
         for(Point cross : World.crosses){
-            distance = (float) Math.sqrt((cross.x - point.x)*(cross.x - point.x) + (cross.x - point.x)*(cross.y - point.y));
+            distance = (float) Math.sqrt((cross.x - point.x)*(cross.x - point.x) + (cross.y - point.y)*(cross.y - point.y));
             if(distance <= bestDistance){
                 bestDistance = distance;
                 bestPoint = cross;
@@ -75,4 +75,7 @@ public class Point {
     }
 
 
+    public boolean isConnectedTo(Point b) {
+        return Connection.isConnectedTo(this, b);
+    }
 }

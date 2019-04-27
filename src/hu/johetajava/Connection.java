@@ -13,7 +13,7 @@ public class Connection {
 
     public static boolean isConnectedTo(Point point1, Point point2) {
         for (Connection connection : World.connections) {
-            if ((connection.point1 == point1 && connection.point2 == point2) || (connection.point2 == point1 && connection.point1 == point2)) {
+            if ((connection.point1.equals(point1) && connection.point2.equals(point2)) || (connection.point2.equals(point1) && connection.point1.equals(point2))) {
                 return true;
             }
         }
@@ -40,14 +40,14 @@ public class Connection {
             System.err.println("Már connectelve vannak!");
             return;
         }
-        if(a == null || b == null) {
+        if (a == null || b == null) {
             System.err.println("Nincs kijelölve 2 pont.");
             return;
         }
         World.connections.add(new Connection(a, b));
     }
 
-    public float getLength(){
+    public float getLength() {
         return point1.getDistance(point2);
     }
 

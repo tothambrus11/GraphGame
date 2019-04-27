@@ -1,6 +1,10 @@
 package hu.johetajava;
 
+import java.util.ArrayList;
 import java.util.Objects;
+
+import static hu.johetajava.World.car;
+import static hu.johetajava.World.crosses;
 
 public class Point {
     private float x;
@@ -17,9 +21,9 @@ public class Point {
         Point bestPoint = null;
 
         float distance;
-        for(Point cross : World.crosses){
-            distance = (float) Math.sqrt((cross.x - point.x)*(cross.x - point.x) + (cross.y - point.y)*(cross.y - point.y));
-            if(distance <= bestDistance){
+        for (Point cross : World.crosses) {
+            distance = (float) Math.sqrt((cross.x - point.x) * (cross.x - point.x) + (cross.y - point.y) * (cross.y - point.y));
+            if (distance <= bestDistance) {
                 bestDistance = distance;
                 bestPoint = cross;
             }
@@ -37,6 +41,15 @@ public class Point {
         return (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 
+    public ArrayList<Point> getNeighbours() {
+        ArrayList<Point> neighbours = new ArrayList<>();
+        for (Point point : crosses) {
+            if (Connection.isConnectedTo(this, point)) {
+                neighbours.add(point);
+            }
+        }
+        return neighbours;
+    }
 
     public float getX() {
         if (x < 0) x = 0;
@@ -60,6 +73,7 @@ public class Point {
         getY();
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -77,5 +91,17 @@ public class Point {
 
     public boolean isConnectedTo(Point b) {
         return Connection.isConnectedTo(this, b);
+    }
+
+    Point copy() {
+        return new Point(getX(), getY());
+    }
+
+    @Override
+    public String toString() {
+        return "Point{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
     }
 }

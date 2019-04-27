@@ -2,9 +2,6 @@ package hu.johetajava;
 
 import processing.core.PApplet;
 
-import java.util.ArrayList;
-import java.util.function.Predicate;
-
 public class Drawer extends PApplet {
 
     private static int backgroundColor;
@@ -19,6 +16,7 @@ public class Drawer extends PApplet {
     private float pointDiameter = 30;
     private int pointColor;
     private int selectedPointColor;
+    private float messagePadding;
 
 
     public void setup() {
@@ -29,6 +27,8 @@ public class Drawer extends PApplet {
 
     public void settings() {
         size(800, 600);
+
+        messagePadding = 15;
 
         // Colors:
         backgroundColor = color(20, 60, 30); // dark green
@@ -42,6 +42,16 @@ public class Drawer extends PApplet {
 
 
     public void draw() {
+
+        if (mode == Mode.play) {
+            Controller.onTick();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         background(backgroundColor);
         fill(100);
 
@@ -50,6 +60,26 @@ public class Drawer extends PApplet {
         drawPoints();
 
         drawConnections();
+
+        drawCar();
+
+        drawMessage();
+    }
+
+    private void drawCar() {
+        if (World.car != null) drawAPoint(World.car, color(255), 12);
+    }
+
+    private void drawMessage() {
+        fill(130);
+        textSize(11);
+        text(getMessage(), toPixels(World.width) + messagePadding, messagePadding, width - toPixels(World.width) - 2 * messagePadding, height - 2 * messagePadding);
+    }
+
+    private String getMessage() {
+        String message = "";
+        message += "MODE: " + mode.name();
+        return message;
     }
 
     private void drawConnections() {
@@ -60,8 +90,8 @@ public class Drawer extends PApplet {
             fill(255);
             textSize(20);
             text(connection.getLength(),
-                    toPixels(Math.min(connection.point1.getX(), connection.point2.getX()) + (Math.abs(connection.point1.getX() - connection.point2.getX())/2)) + 5,
-                    toPixels(Math.min(connection.point1.getY(), connection.point2.getY()) + (Math.abs(connection.point1.getY() - connection.point2.getY())/2)) + 5
+                    toPixels(Math.min(connection.point1.getX(), connection.point2.getX()) + (Math.abs(connection.point1.getX() - connection.point2.getX()) / 2)) + 5,
+                    toPixels(Math.min(connection.point1.getY(), connection.point2.getY()) + (Math.abs(connection.point1.getY() - connection.point2.getY()) / 2)) + 5
             );
         }
     }
@@ -83,8 +113,21 @@ public class Drawer extends PApplet {
             case 'c':
                 mode = Mode.createPoints;
                 break;
+            case 'p':
+                mode = Mode.play;
+                break;
         }
         switch (mode.name()) {
+            case "play":
+                switch (key) {
+                    case 'f':
+                        World.car = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
+                        break;
+                    case 't':
+                        World.target = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
+                        break;
+                }
+                break;
             case "createPoints":
                 switch (key) {
                     case 'f':

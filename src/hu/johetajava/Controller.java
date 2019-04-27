@@ -2,6 +2,7 @@ package hu.johetajava;
 
 import processing.core.PApplet;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -32,24 +33,31 @@ public class Controller {
 
 
         if(car.equals(target)){
-            System.out.println("Megerkeztünk");
+            System.out.println("Megjöttünk!");
             return;
         }
         float bestDistance = Controller.infinity;
         Point bestNeighbour = null;
 
         ArrayList<Point> neighbours = car.getNeighbours();
-        System.err.println(Arrays.toString(neighbours.toArray()));
+        System.out.println(Arrays.toString(neighbours.toArray()));
 
+        ArrayList<Point> prev  = new ArrayList<>();
+        prev.add(car);
         for(Point nextPoint : neighbours){
-            float distance = car.getDistance(nextPoint);
+            ArrayList<Point> prev2 = new ArrayList<>();
+            for(Point p : prev){
+                prev2.add(p.copy());
+            }
+
+            float distance = car.getDistance(nextPoint) + getDistance(nextPoint, prev2);
             if(distance <= bestDistance){
                 bestDistance = distance;
                 bestNeighbour = nextPoint;
             }
         }
         if (bestNeighbour != null) {
-            car = bestNeighbour;
+            drawer.moveCarTo(bestNeighbour);
         }
 
     }

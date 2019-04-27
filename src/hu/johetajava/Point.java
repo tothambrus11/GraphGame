@@ -79,8 +79,7 @@ public class Point {
         if (this == o) return true;
         if (!(o instanceof Point)) return false;
         Point point = (Point) o;
-        return Float.compare(point.x, x) == 0 &&
-                Float.compare(point.y, y) == 0;
+        return point.x == x && point.y == y;
     }
 
     @Override

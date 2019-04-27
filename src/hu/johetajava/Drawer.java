@@ -17,6 +17,9 @@ public class Drawer extends PApplet {
     private int pointColor;
     private int selectedPointColor;
     private float messagePadding;
+    private boolean moving;
+    private float percent;
+    public static Point target;
 
 
     public void setup() {
@@ -26,12 +29,12 @@ public class Drawer extends PApplet {
     }
 
     public void settings() {
-        size(800, 600);
+        size(850, 600);
 
         messagePadding = 15;
 
         // Colors:
-        backgroundColor = color(20, 60, 30); // dark green
+        backgroundColor = color(9, 24, 48); // dark green
         roadColor = color(200);
         pointColor = color(66, 134, 244);
         selectedPointColor = color(65, 102, 163);
@@ -43,13 +46,8 @@ public class Drawer extends PApplet {
 
     public void draw() {
 
-        if (mode == Mode.play) {
+        if (mode == Mode.play && !moving) {
             Controller.onTick();
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
 
         background(backgroundColor);
@@ -61,13 +59,34 @@ public class Drawer extends PApplet {
 
         drawConnections();
 
-        drawCar();
-
+        if (moving) {
+            percent+= 3/World.car.getDistance(target);
+            drawMovingCar();
+            if (percent >= 100) {
+                percent = 0;
+                World.car = target;
+                target = null;
+                moving = false;
+            }
+        } else {
+            drawCar();
+        }
         drawMessage();
+        if (moving) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void drawCar() {
-        if (World.car != null) drawAPoint(World.car, color(255), 12);
+        if (World.car != null) drawCar(World.car);
+    }
+
+    private void drawCar(Point point) {
+        drawAPoint(point, color(255), 12);
     }
 
     private void drawMessage() {
@@ -78,7 +97,17 @@ public class Drawer extends PApplet {
 
     private String getMessage() {
         String message = "";
-        message += "MODE: " + mode.name();
+        message += "Mód: " + mode.name();
+        message += "\n\nIrányítás:\n    C: térkép szerkesztése\n    P: útvonaltervezés";
+
+        switch (mode.name()){
+            case "play":
+                message += "\n\n    F: kiindulási hely kijelölése\n    T: cél kijelölése";
+                break;
+            case "createPoints":
+                message += "\n\n    F: út kezdetének kijelölése\n    space: út végződésének kijelölése";
+                break;
+        }
         return message;
     }
 
@@ -88,7 +117,7 @@ public class Drawer extends PApplet {
             strokeWeight(2);
             line(toPixels(connection.point1.getX()), toPixels(connection.point1.getY()), toPixels(connection.point2.getX()), toPixels(connection.point2.getY()));
             fill(255);
-            textSize(20);
+            textSize(11);
             text(connection.getLength(),
                     toPixels(Math.min(connection.point1.getX(), connection.point2.getX()) + (Math.abs(connection.point1.getX() - connection.point2.getX()) / 2)) + 5,
                     toPixels(Math.min(connection.point1.getY(), connection.point2.getY()) + (Math.abs(connection.point1.getY() - connection.point2.getY()) / 2)) + 5
@@ -134,7 +163,7 @@ public class Drawer extends PApplet {
 
                         Point nearestPoint = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
                         if (connectFrom != null && connectTo != null && nearestPoint == connectTo) {
-                            System.err.println("Nem lehet ugyanaz a to és a from");
+                            System.out.println("Nem lehet ugyanaz a to és a from");
                         } else {
                             connectFrom = nearestPoint;
                         }
@@ -142,7 +171,7 @@ public class Drawer extends PApplet {
                     case ' ':
                         nearestPoint = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
                         if (connectTo != null && connectFrom != null && connectFrom == nearestPoint) {
-                            System.err.println("Nem lehet ugyanaz a to és a from");
+                            System.out.println("Nem lehet ugyanaz a to és a from");
                         } else {
                             connectTo = nearestPoint;
                         }
@@ -210,4 +239,18 @@ public class Drawer extends PApplet {
         return pixelValue / unit;
     }
 
+    private void drawMovingCar() {
+        Point from = World.car.copy();
+
+        drawCar(new Point(
+                from.getX() + (target.getX() - from.getX()) * (percent / 100.0f),
+                from.getY() + (target.getY() - from.getY()) * (percent / 100.0f)
+        ));
+    }
+
+    public void moveCarTo(Point to) {
+        moving = true;
+        percent = 0;
+        target = to.copy();
+    }
 }

@@ -45,7 +45,6 @@ public class Drawer extends PApplet {
 
     public void draw() {
 
-        Controller.onTick();
 
         background(backgroundColor);
         fill(100);
@@ -62,6 +61,10 @@ public class Drawer extends PApplet {
 
         drawMessage();
 
+        if(World.target != null){
+            drawAPoint(World.target, color(40,250,40), 12);
+        }
+
         if (moving) {
             percent += 3 / World.car.getDistance(target);
             drawMovingCar();
@@ -74,6 +77,8 @@ public class Drawer extends PApplet {
                 moving = false;
             }
         } else {
+            Controller.onTick();
+
             drawCar();
         }
         if (moving) {
@@ -83,6 +88,7 @@ public class Drawer extends PApplet {
                 e.printStackTrace();
             }
         }
+
 
 
     }

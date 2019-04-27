@@ -37,11 +37,11 @@ public class Connection {
 
     public static void connect(Point a, Point b) {
         if (isConnectedTo(a, b)) {
-            System.out.println("Már connectelve vannak!");
+            System.err.println("Már connectelve vannak!");
             return;
         }
         if (a == null || b == null) {
-            System.out.println("Nincs kijelölve 2 pont.");
+            System.err.println("Nincs kijelölve 2 pont.");
             return;
         }
         World.connections.add(new Connection(a, b));

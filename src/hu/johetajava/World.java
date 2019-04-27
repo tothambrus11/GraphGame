@@ -27,13 +27,8 @@ public class World {
 
 
     static float getDistance(Point start, ArrayList<Point> prev){
-        System.out.println("============ getDistance");
-        System.out.println("START: " + start);
-        System.out.println("TARGET: " + target);
-        System.out.println("prev: " + Arrays.toString(prev.toArray()));
 
         if(start.equals(target)){
-            System.out.println("Találtam utat!");
             return 0;
         }
 
@@ -48,8 +43,6 @@ public class World {
         Point bestNeighbour = null;
 
         ArrayList<Point> neighbours = start.getNeighbours();
-        System.out.println("Neighbours: " + Arrays.toString(neighbours.toArray()));
-
         for(Point nextPoint : neighbours){
             boolean contains = false;
             for (Point p : prev2) {
@@ -68,11 +61,11 @@ public class World {
             }
         }
 
+        // Dead end road
         if(bestNeighbour == null){
-            System.out.println("Ez egy zsákutca");
             return Controller.infinity;
         }
-        System.out.println("Best neighbour: " + bestNeighbour + "    d=" + bestDistance);
+        //System.err.println("Best neighbour: " + bestNeighbour + "    d=" + bestDistance);
         return bestDistance;
     }
 }

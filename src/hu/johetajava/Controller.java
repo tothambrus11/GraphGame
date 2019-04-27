@@ -27,20 +27,20 @@ public class Controller {
     }
 
     public static void onTick() {
+        System.err.println("TICK ============================");
         if(car == null || World.target == null){
             return;
         }
 
 
         if(car.equals(target)){
-            System.out.println("Megjöttünk!");
+            System.err.println("Megjöttünk!");
             return;
         }
         float bestDistance = Controller.infinity;
         Point bestNeighbour = null;
 
         ArrayList<Point> neighbours = car.getNeighbours();
-        System.out.println(Arrays.toString(neighbours.toArray()));
 
         ArrayList<Point> prev  = new ArrayList<>();
         prev.add(car);
@@ -58,6 +58,9 @@ public class Controller {
         }
         if (bestNeighbour != null) {
             drawer.moveCarTo(bestNeighbour);
+        }
+        else{
+            System.err.println("Nincs út a célpont felé");
         }
 
     }

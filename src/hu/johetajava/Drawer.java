@@ -9,16 +9,15 @@ public class Drawer extends PApplet {
 
     private static float unit = 30;
 
-    private static String title = "Hello World!";
+    private static String title = "Gráfgém";
     private Point connectFrom;
     private Point connectTo;
-    private Mode mode = Mode.createPoints;
     private float pointDiameter = 30;
     private int pointColor;
     private int selectedPointColor;
     private float messagePadding;
     private boolean moving;
-    private float percent;
+    private float percent = 0;
     public static Point target;
 
 
@@ -46,22 +45,28 @@ public class Drawer extends PApplet {
 
     public void draw() {
 
-        if (mode == Mode.play && !moving) {
-            Controller.onTick();
-        }
+        Controller.onTick();
 
         background(backgroundColor);
         fill(100);
 
         drawMap();
+        drawConnections();
+
+        if (keyPressed && keyCode == 16 && connectFrom != null && connectTo == null) {
+            drawConnection(new Connection(connectFrom, new Point(fromPixels(mouseX), fromPixels(mouseY))), 0.6f);
+        }
 
         drawPoints();
 
-        drawConnections();
+
+        drawMessage();
 
         if (moving) {
-            percent+= 3/World.car.getDistance(target);
+            percent += 3 / World.car.getDistance(target);
             drawMovingCar();
+
+            System.err.println(percent);
             if (percent >= 100) {
                 percent = 0;
                 World.car = target;
@@ -71,7 +76,6 @@ public class Drawer extends PApplet {
         } else {
             drawCar();
         }
-        drawMessage();
         if (moving) {
             try {
                 Thread.sleep(10);
@@ -79,6 +83,8 @@ public class Drawer extends PApplet {
                 e.printStackTrace();
             }
         }
+
+
     }
 
     private void drawCar() {
@@ -97,32 +103,35 @@ public class Drawer extends PApplet {
 
     private String getMessage() {
         String message = "";
-        message += "Mód: " + mode.name();
-        message += "\n\nIrányítás:\n    C: térkép szerkesztése\n    P: útvonaltervezés";
+        message += "Irányítás:";
+        message += "\n   kattintás: új pont létrehozása";
+        message += "\n    shift + kattintás: pontok összekötése";
+        message += "\n    F: kiindulási hely kijelölése";
+        message += "\n    T: cél kijelölése";
 
-        switch (mode.name()){
-            case "play":
-                message += "\n\n    F: kiindulási hely kijelölése\n    T: cél kijelölése";
-                break;
-            case "createPoints":
-                message += "\n\n    F: út kezdetének kijelölése\n    space: út végződésének kijelölése";
-                break;
-        }
         return message;
     }
 
     private void drawConnections() {
         for (Connection connection : World.connections) {
-            stroke(roadColor);
-            strokeWeight(2);
-            line(toPixels(connection.point1.getX()), toPixels(connection.point1.getY()), toPixels(connection.point2.getX()), toPixels(connection.point2.getY()));
-            fill(255);
-            textSize(11);
-            text(connection.getLength(),
-                    toPixels(Math.min(connection.point1.getX(), connection.point2.getX()) + (Math.abs(connection.point1.getX() - connection.point2.getX()) / 2)) + 5,
-                    toPixels(Math.min(connection.point1.getY(), connection.point2.getY()) + (Math.abs(connection.point1.getY() - connection.point2.getY()) / 2)) + 5
-            );
+            drawConnection(connection, 2);
         }
+    }
+
+    private void drawConnection(Connection connection, float width) {
+        stroke(roadColor);
+        strokeWeight(width);
+        line(toPixels(connection.point1.getX()), toPixels(connection.point1.getY()), toPixels(connection.point2.getX()), toPixels(connection.point2.getY()));
+
+        float x = toPixels(Math.min(connection.point1.getX(), connection.point2.getX()) + (Math.abs(connection.point1.getX() - connection.point2.getX()) / 2));
+        float y = toPixels(Math.min(connection.point1.getY(), connection.point2.getY()) + (Math.abs(connection.point1.getY() - connection.point2.getY()) / 2));
+
+        fill(0, 0, 0, 100);
+        rect(x, y + 2, 40, -14);
+
+        fill(255);
+        textSize(11);
+        text(connection.getLength(), x, y);
     }
 
     private void drawPoints() {
@@ -138,59 +147,24 @@ public class Drawer extends PApplet {
 
 
     public void keyTyped() {
+
         switch (key) {
-            case 'c':
-                mode = Mode.createPoints;
+            case 'f':
+                World.car = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
                 break;
-            case 'p':
-                mode = Mode.play;
+            case 't':
+                World.target = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
                 break;
-        }
-        switch (mode.name()) {
-            case "play":
-                switch (key) {
-                    case 'f':
-                        World.car = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
-                        break;
-                    case 't':
-                        World.target = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
-                        break;
+            case 'z':
+                if (World.crosses.size() > 0) {
+                    Point lastCross = World.crosses.get(World.crosses.size() - 1);
+
+                    World.crosses.remove(lastCross);
+                    World.connections.removeIf(connection -> connection.point1 == lastCross || connection.point2 == lastCross);
                 }
                 break;
-            case "createPoints":
-                switch (key) {
-                    case 'f':
 
-                        Point nearestPoint = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
-                        if (connectFrom != null && connectTo != null && nearestPoint == connectTo) {
-                            System.out.println("Nem lehet ugyanaz a to és a from");
-                        } else {
-                            connectFrom = nearestPoint;
-                        }
-                        break;
-                    case ' ':
-                        nearestPoint = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
-                        if (connectTo != null && connectFrom != null && connectFrom == nearestPoint) {
-                            System.out.println("Nem lehet ugyanaz a to és a from");
-                        } else {
-                            connectTo = nearestPoint;
-                        }
-
-                        Connection.connect(connectFrom, connectTo);
-                        connectTo = null;
-                        connectFrom = null;
-                        break;
-                    case 'z':
-                        if (World.crosses.size() > 0) {
-                            Point lastCross = World.crosses.get(World.crosses.size() - 1);
-
-                            World.crosses.remove(lastCross);
-                            World.connections.removeIf(connection -> connection.point1 == lastCross || connection.point2 == lastCross);
-                        }
-
-                }
         }
-
     }
 
     private void drawAPoint(Point point) {
@@ -205,9 +179,27 @@ public class Drawer extends PApplet {
 
 
     public void mouseClicked() {
-        World.crosses.add(new Point(fromPixels(mouseX), fromPixels(mouseY)));
+        if (!keyPressed) {
+            World.crosses.add(new Point(fromPixels(mouseX), fromPixels(mouseY)));
+        } else if (keyCode == 16) {
+            if (connectFrom == null) {
+                connectFrom = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
+            } else {
+                connectTo = Point.getNearestPoint(new Point(fromPixels(mouseX), fromPixels(mouseY)), fromPixels(pointDiameter / 2.0f));
+                if (connectTo == null) {
+                    System.err.println("Félreklikkeltél");
+                } else if (connectTo.equals(connectFrom)) {
+                    System.err.println("Nem lehet ugyanaz a to és a from");
+                } else {
+                    Connection.connect(connectFrom, connectTo);
+                    connectTo = null;
+                    connectFrom = null;
+                }
 
+            }
+        }
     }
+
 
     void drawMap() {
         for (int x = 1; x <= World.width; x++) {
@@ -250,7 +242,6 @@ public class Drawer extends PApplet {
 
     public void moveCarTo(Point to) {
         moving = true;
-        percent = 0;
         target = to.copy();
     }
 }
